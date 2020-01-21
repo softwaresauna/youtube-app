@@ -1,0 +1,3 @@
+[submodule "google-api-typings-generator"]
+	path = google-api-typings-generator
+	url = https://github.com/Maxim-Mazurok/google-api-typings-generator

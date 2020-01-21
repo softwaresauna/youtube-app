@@ -25,37 +25,34 @@ const App = () => {
     document.body.appendChild(script);
   };
 
-  // function authenticate() {
-  //   return window.gapi.auth2
-  //     .getAuthInstance()
-  //     .signIn({ scope: "https://www.googleapis.com/auth/youtube.readonly" })
-  //     .then(
-  //       function() {
-  //         console.log("Sign-in successful");
-  //       },
-  //       function(err: any) {
-  //         console.error("Error signing in", err);
-  //       }
-  //     );
-  // }
+  function authenticate() {
+    return window.gapi.auth2
+      .getAuthInstance()
+      .signIn({ scope: "https://www.googleapis.com/auth/youtube.readonly" })
+      .then(
+        () => console.log("Sign-in successful"),
+        (err: Error) => console.error("Error signing in", err)
+      );
+  }
+
   // // Make sure the client is loaded and sign-in is complete before calling this method.
-  // function execute() {
-  //   return window.gapi.client.youtube.videos
-  //     .list({
-  //       part: "snippet,contentDetails,statistics",
-  //       chart: "mostPopular",
-  //       regionCode: "US"
-  //     })
-  //     .then(
-  //       function(response: any) {
-  //         // Handle the results here (response.result has the parsed body).
-  //         console.log("Response", response);
-  //       },
-  //       function(err: any) {
-  //         console.error("Execute error", err);
-  //       }
-  //     );
-  // }
+  function execute() {
+    return window.gapi.client.youtube.videos
+      .list({
+        part: "snippet,contentDetails,statistics",
+        chart: "mostPopular",
+        regionCode: "US"
+      })
+      .then(
+        function(response: any) {
+          // Handle the results here (response.result has the parsed body).
+          console.log("Response", response);
+        },
+        function(err: any) {
+          console.error("Execute error", err);
+        }
+      );
+  }
 
   useEffect(() => loadYoutubeApi(), []);
 
