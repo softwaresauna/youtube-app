@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useEffect, useRef, useCallback, useState } from "react";
+import React, { useEffect, useState } from "react";
 import logo from "./logo.svg";
 import "./App.css";
 
@@ -9,7 +9,9 @@ const CLIENT_ID =
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const loadYoutubeApi = useCallback(() => {
+  const [gapiLoaded, setGapiLoaded] = useState(false);
+
+  const loadYoutubeApi = () => {
     if (window.gapi) {
       return;
     }
@@ -18,23 +20,19 @@ const App = () => {
     script.src = "https://apis.google.com/js/client.js";
 
     script.onload = () => {
-      window.gapi.load("client", () => {
-        window.gapi.client.load("youtube", "v3", () => {
-          console.log("Google client api loaded");
-          init();
+      gapi.load("client", () => {
+        gapi.client.load("youtube", "v3", () => {
+          gapi.client.setApiKey(API_KEY);
+          gapi.auth2.init({
+            client_id: CLIENT_ID,
+            scope: "https://www.googleapis.com/auth/youtube.readonly"
+          });
+          setGapiLoaded(true);
         });
       });
     };
 
     document.body.appendChild(script);
-  }, []);
-
-  const init = () => {
-    gapi.client.setApiKey(API_KEY);
-    gapi.auth2.init({
-      client_id: CLIENT_ID,
-      scope: "https://www.googleapis.com/auth/youtube.readonly"
-    });
   };
 
   const authenticate = async () => {
@@ -62,7 +60,7 @@ const App = () => {
     }
   };
 
-  useEffect(() => loadYoutubeApi(), [loadYoutubeApi]);
+  useEffect(() => loadYoutubeApi(), []);
 
   return (
     <div className="App">
@@ -71,7 +69,9 @@ const App = () => {
         <p>
           Edit <code>src/App.tsx</code> and save to reload.
         </p>
-        <button onClick={() => authenticate()}>Authenticate</button>
+        {gapiLoaded && (
+          <button onClick={() => authenticate()}>Authenticate</button>
+        )}
         {isLoggedIn && <button onClick={() => execute()}>Fetch Videos</button>}
       </header>
     </div>
