@@ -7,13 +7,17 @@ import { useGapi } from "./useGapi";
 
 // Make sure the client is loaded and sign-in is complete before calling this method.
 const getPopularVideos = async () => {
-  const response = await window.gapi.client.youtube.videos.list({
-    part: "snippet",
-    chart: "mostPopular",
-    regionCode: "US",
-  });
-  // Handle the results here (response.result has the parsed body).
-  return response.result;
+  try {
+    const response = await window.gapi.client.youtube.videos.list({
+      part: "snippet",
+      chart: "mostPopular",
+      regionCode: "US",
+    });
+    // Handle the results here (response.result has the parsed body).
+    return response.result;
+  } catch (error) {
+    return error;
+  }
 };
 
 const App = () => {
@@ -21,15 +25,15 @@ const App = () => {
 
   const { status, data, error } = useQuery(
     gapiLoaded && "videos",
-    getPopularVideos,
-    {
-      retry: (_, response) => {
-        if ((response as any).status === 403) {
-          return false;
-        }
-        return true;
-      },
-    }
+    getPopularVideos
+    // {
+    //   retry: (_, response) => {
+    //     if ((response as any).status === 403) {
+    //       return false;
+    //     }
+    //     return true;
+    //   },
+    // }
   );
 
   React.useEffect(() => {
