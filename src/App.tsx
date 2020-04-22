@@ -1,80 +1,64 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useEffect, useState } from "react";
-import logo from "./logo.svg";
+import * as React from "react";
+import { useQuery } from "react-query";
+import { ReactQueryDevtools } from "react-query-devtools";
 import "./App.css";
+import { useGapi } from "./useGapi";
 
-const API_KEY = "AIzaSyDCfKSNLeYj2DCufI9nfMTc_-gtpyWMW9M";
-const CLIENT_ID =
-  "332020508961-t7tue80uk5ovr7it0j6513plf450tfmv.apps.googleusercontent.com";
+// Make sure the client is loaded and sign-in is complete before calling this method.
+const getPopularVideos = async () => {
+  const response = await window.gapi.client.youtube.videos.list({
+    part: "snippet",
+    chart: "mostPopular",
+    regionCode: "US",
+  });
+  // Handle the results here (response.result has the parsed body).
+  return response.result;
+};
 
 const App = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [gapiLoaded, setGapiLoaded] = useState(false);
+  const gapiLoaded = useGapi();
 
-  const loadYoutubeApi = () => {
-    if (window.gapi) {
-      return;
+  const { status, data, error } = useQuery(
+    gapiLoaded && "videos",
+    getPopularVideos,
+    {
+      retry: (_, response) => {
+        if ((response as any).status === 403) {
+          return false;
+        }
+        return true;
+      },
     }
+  );
 
-    const script = document.createElement("script");
-    script.src = "https://apis.google.com/js/client.js";
+  React.useEffect(() => {
+    console.log("status", status);
+  }, [status]);
 
-    script.onload = () => {
-      gapi.load("client", () => {
-        gapi.client.load("youtube", "v3", () => {
-          gapi.client.setApiKey(API_KEY);
-          gapi.auth2.init({
-            client_id: CLIENT_ID,
-            scope: "https://www.googleapis.com/auth/youtube.readonly"
-          });
-          setGapiLoaded(true);
-        });
-      });
-    };
+  // React.useEffect(() => {
+  //   console.log("data", data);
+  // }, [data]);
 
-    document.body.appendChild(script);
-  };
-
-  const authenticate = async () => {
-    window.gapi.auth2
-      .getAuthInstance()
-      .signIn()
-      .then(
-        () => setIsLoggedIn(true),
-        err => console.error("Error signing in", err)
-      );
-  };
-
-  // Make sure the client is loaded and sign-in is complete before calling this method.
-  const execute = async () => {
-    try {
-      const response = await window.gapi.client.youtube.videos.list({
-        part: "snippet,contentDetails,statistics",
-        chart: "mostPopular",
-        regionCode: "US"
-      });
-      // Handle the results here (response.result has the parsed body).
-      console.log("Response", response);
-    } catch (err) {
-      return console.error("Execute error", err);
-    }
-  };
-
-  useEffect(() => loadYoutubeApi(), []);
+  React.useEffect(() => {
+    console.log("error", error);
+  }, [error]);
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        {gapiLoaded && (
-          <button onClick={() => authenticate()}>Authenticate</button>
-        )}
-        {isLoggedIn && <button onClick={() => execute()}>Fetch Videos</button>}
-      </header>
-    </div>
+    <>
+      <div className="App">
+        {(() => {
+          if (status === "loading") {
+            return <span>Loading...</span>;
+          }
+
+          if (status === "error") {
+            return <span>Error: {(error as any).result.error.message}</span>;
+          }
+        })()}
+      </div>
+      <ReactQueryDevtools initialIsOpen={true} />
+    </>
   );
 };
 
