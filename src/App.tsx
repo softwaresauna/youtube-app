@@ -6,17 +6,19 @@ import "./App.css";
 import { useGapi } from "./useGapi";
 
 const getPopularVideos = async (key: string, pageToken?: string) => {
-  const response = await window.gapi.client.youtube.videos.list({
-    part: "snippet",
-    chart: "mostPopular",
-    regionCode: "US",
-    maxResults: 10,
-    ...{ pageToken },
-  });
+  try {
+    const { result } = await window.gapi.client.youtube.videos.list({
+      part: "snippet",
+      chart: "mostPopular",
+      regionCode: "US",
+      maxResults: 10,
+      ...{ pageToken },
+    });
 
-  console.log(response);
-
-  return response;
+    return result;
+  } catch (error) {
+    throw error.result.error;
+  }
 };
 
 const App = () => {
@@ -30,8 +32,9 @@ const App = () => {
     error,
     isFetching,
   } = usePaginatedQuery(gapiLoaded && ["videos", pageToken], getPopularVideos, {
-    retry: (_, response: any) => {
-      if (response.result.error) {
+    retry: (_, result: any) => {
+      console.log(result.code);
+      if (result.code === 403) {
         return false;
       }
       return true;
@@ -43,11 +46,9 @@ const App = () => {
     <>
       <div className="App">
         {status === "loading" && <div>Loading...</div>}
-        {status === "error" && (
-          <div>Error: {(error as any).result.error.message}</div>
-        )}
+        {status === "error" && <div>Error: {(error as any).message}</div>}
         {status === "success" &&
-          resolvedData?.result?.items?.map((item) => (
+          resolvedData?.items?.map((item) => (
             <div key={item.id}>{item?.snippet?.title}</div>
           ))}
       </div>
