@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import * as React from "react";
-import { usePaginatedQuery } from "react-query";
+import { usePaginatedQuery, useInfiniteQuery } from "react-query";
 import { ReactQueryDevtools } from "react-query-devtools";
 import "./App.css";
 import { useGapi } from "./useGapi";
@@ -27,18 +27,20 @@ const App = () => {
 
   const {
     status,
-    resolvedData,
-    latestData,
+    data,
     error,
     isFetching,
-  } = usePaginatedQuery(gapiLoaded && ["videos", pageToken], getPopularVideos, {
-    retry: (_, result: any) => {
-      console.log(result.code);
-      if (result.code === 403) {
-        return false;
-      }
-      return true;
-    },
+    isFetchingMore,
+    fetchMore,
+    canFetchMore,
+  } = useInfiniteQuery(gapiLoaded && "videos", getPopularVideos, {
+    getFetchMore: (lastGroup, allGroups) => lastGroup.nextCursor,
+    // retry: (i, result: any) => {
+    //   if (result.code === 403) {
+    //     return false;
+    //   }
+    //   return true;
+    // },
     // staleTime: 100000,
   });
 
@@ -48,7 +50,7 @@ const App = () => {
         {status === "loading" && <div>Loading...</div>}
         {status === "error" && <div>Error: {(error as any).message}</div>}
         {status === "success" &&
-          resolvedData?.items?.map((item) => (
+          data.items?.map((item) => (
             <div key={item.id}>{item?.snippet?.title}</div>
           ))}
       </div>

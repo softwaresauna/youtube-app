@@ -15,7 +15,7 @@ export const useGapi = () => {
     script.onload = () => {
       gapi.load("client", () => {
         gapi.client.load("youtube", "v3", () => {
-          // gapi.client.setApiKey(process.env.REACT_APP_API_KEY as string);
+          gapi.client.setApiKey(process.env.REACT_APP_API_KEY as string);
 
           setIsLoaded(true);
         });
